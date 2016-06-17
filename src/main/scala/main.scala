@@ -51,7 +51,7 @@ object Main {
     val products = FileUtils.loadProducts
 
     val c = new ListingCollection(listings)
-    val allProductMatches = products.par.map(p => (p.productName, c.search(p)))
+    val allProductMatches = products.par.map(p => (p.productName, c.search(p))).filter(_._2.size > 0)
     FileUtils.writeResults("results.txt", allProductMatches)
   }
 }
