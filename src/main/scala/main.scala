@@ -44,13 +44,17 @@ class ListingCollection(listings: Array[Listing]) {
   }
 }
 
+object ListingCollection {
+  def apply(listings: Array[Listing]) = new ListingCollection(listings)
+}
+
 object Main {
 
   def main(args: Array[String]) = {
     val listings = FileUtils.loadListings
     val products = FileUtils.loadProducts
 
-    val c = new ListingCollection(listings)
+    val c = ListingCollection(listings)
     val allProductMatches = products.par.map(p => (p.productName, c.search(p))).filter(_._2.size > 0)
     FileUtils.writeResults("results.txt", allProductMatches)
   }
