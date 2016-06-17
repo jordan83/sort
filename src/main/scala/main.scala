@@ -22,6 +22,9 @@ class ListingCollection(listings: Array[Listing]) {
     documentFrequencies.filter{ case (listing, numMatches) => numMatches >= p.tokens.size }.map(_._1)
   }
 
+  // TODO: Makes sense to be slightly more permissive on family typos as well as manufacturer. Continue to be
+  // strict about the model numbers, single character changes can make a large difference. Makes sense
+  // to lower case all the text though first though.
   private def tokenTolerancePairs(p: Product) =
     p.manufacturer.tokens.toList.map((_, 1)) ++ (p.family.getOrElse("") + " " + p.model).tokens.toList.map((_, 0))
 
@@ -55,6 +58,7 @@ object Main {
     val products = FileUtils.loadProducts
 
     val c = ListingCollection(listings)
+    // TODO: Consider filtering out listings whose prices are significantly far away from the mean price.
     val allProductMatches = products.par.map(p => (p.productName, c.search(p))).filter(_._2.size > 0)
     FileUtils.writeResults("results.txt", allProductMatches)
   }

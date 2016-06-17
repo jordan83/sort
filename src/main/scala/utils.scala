@@ -1,5 +1,6 @@
 
 object StringUtils {
+  // TODO: Borrowed from wikipedia. Refactor in a functional way or find a reasonable dependency to take in.
   def levenshtein(str1: String, str2: String): Int = {
     val lenStr1 = str1.length
     val lenStr2 = str2.length
