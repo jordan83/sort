@@ -1,11 +1,9 @@
 import com.peoplepattern.text.Implicits._
 
 case class Listing(title: String, manufacturer: String, currency: String, price: String) {
-  lazy val tokens = (title + manufacturer).tokens.toList
+  lazy val tokens = (title.tokens ++ manufacturer.tokens).toList
 }
-case class Product(productName: String, manufacturer: String, family: Option[String], model: String, announcedDate: String)  {
-  lazy val tokens = (manufacturer + " " + family.getOrElse("") + " " + model).tokens.toList
-}
+case class Product(productName: String, manufacturer: String, family: Option[String], model: String, announcedDate: String)
 
 class ListingCollection(listings: Array[Listing]) {
   type InvertedIndex = Map[String, Set[Int]]
@@ -19,14 +17,11 @@ class ListingCollection(listings: Array[Listing]) {
     // Find the frequency of a listing. We're looking for listings that match every token, so filter out any listings
     // that don't occur once for every token in the given product
     val documentFrequencies = matchingListings.foldLeft(Map[Listing, Int]().withDefaultValue(0))((acc, l) =>acc + (l -> (acc(l) + 1)))
-    documentFrequencies.filter{ case (listing, numMatches) => numMatches >= p.tokens.size }.map(_._1)
+    documentFrequencies.filter{ case (listing, numMatches) => numMatches >= tokenTolerancePairs(p).size }.map(_._1)
   }
 
-  // TODO: Makes sense to be slightly more permissive on family typos as well as manufacturer. Continue to be
-  // strict about the model numbers, single character changes can make a large difference. Makes sense
-  // to lower case all the text though first though.
   private def tokenTolerancePairs(p: Product) =
-    p.manufacturer.tokens.toList.map((_, 1)) ++ (p.family.getOrElse("") + " " + p.model).tokens.toList.map((_, 0))
+    (p.manufacturer + " " + p.family.getOrElse("")).toLowerCase.tokens.toList.map((_, 1)) ++ p.model.toLowerCase.tokens.toList.map((_, 0))
 
   private def listingsWithToken(token: String, tolerance: Int) =
     tree.find(token, tolerance).flatMap(t => invertedIndex(t).map(listings(_))).toSet
@@ -37,12 +32,12 @@ class ListingCollection(listings: Array[Listing]) {
   }
 
   private lazy val invertedIndex = {
-    def addDocToIndex(invIndex: InvertedIndex, l: Listing, index: Int) = {
-      l.tokens.foldLeft(invIndex){(acc, t) => acc + (t -> (acc(t) + index))}
+    def addListingToIndex(invIndex: InvertedIndex, l: Listing, index: Int) = {
+      l.tokens.map(_.toLowerCase).foldLeft(invIndex){(acc, t) => acc + (t -> (acc(t) + index))}
     }
 
     listings.zipWithIndex.foldLeft(InvertedIndex()){(acc, e) =>
-      addDocToIndex(acc, e._1, e._2)
+      addListingToIndex(acc, e._1, e._2)
     }
   }
 }
