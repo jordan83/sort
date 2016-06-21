@@ -22,22 +22,19 @@ object FileUtils {
 
   def writeResults(file: String, results: ParArray[(String, List[Listing])]) = {
     val pw = new PrintWriter(new File(file))
-    results.foreach{ kv =>
-      val json = (
-        ("product_name" -> kv._1) ~
-          ("listings" -> kv._2.map{l =>
-            (
-              ("title" -> l.title) ~
-                ("manufacturer" -> l.manufacturer) ~
-                ("currency" -> l.currency) ~
-                ("price" -> l.price)
-              )
-          })
-        )
+    results.toList.foreach{ kv =>
+      val json = ("product_name" -> kv._1) ~
+        ("listings" -> kv._2.map { l =>
+          ("title" -> l.title) ~
+            ("manufacturer" -> l.manufacturer) ~
+            ("currency" -> l.currency) ~
+            ("price" -> l.price)
+        })
 
       pw.write(compact(render(json)))
       pw.write("\n")
     }
+    pw.close()
   }
 
   private def fileToJsonList(fileName: String) = {
