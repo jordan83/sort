@@ -5,7 +5,6 @@ import org.json4s.JsonDSL._
 import org.json4s.native.JsonMethods._
 
 import scala.collection.parallel.mutable.ParArray
-import scala.collection.immutable.Iterable
 import scala.io.Source
 
 object FileUtils {
@@ -21,7 +20,7 @@ object FileUtils {
     fileToJsonList("products.txt").map(transformProductJson(_)).map(_.extract[Product])
   }
 
-  def writeResults(file: String, results: ParArray[(String, Iterable[Listing])]) = {
+  def writeResults(file: String, results: ParArray[(String, List[Listing])]) = {
     val pw = new PrintWriter(new File(file))
     results.foreach{ kv =>
       val json = (
