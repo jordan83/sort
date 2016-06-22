@@ -20,20 +20,23 @@ class ListingCollection(listings: Array[Listing]) {
   def search(p: Product) = {
 
     def tokenTolerancePairs(p: Product) =
-      (p.manufacturer + " " + p.family.getOrElse("")).toLowerCase.tokens.toList.map((_, 1)) ++ p.model.toLowerCase.tokens.toList.map((_, 0))
+      (p.manufacturer + " " + p.family.getOrElse("")).toLowerCase.tokens.toList.map((_, 2)) ++ p.model.toLowerCase.tokens.toList.map((_, 0))
 
     def listingsWithToken(token: String, tolerance: Int) = tree.find(token, tolerance).flatMap(t => invertedIndex(t).map(listings(_))).toSet
 
-    // Filter listings with prices that are more than 2 standard deviations from the mean. This
-    // Should be enough to pick up the real outliers. We could be a bit more conservative if we
-    // took into account the currency differences.
     def filterByPrice(listings: Iterable[Listing]) = {
       val listingsWithPrices = listings.flatMap(l => l.parsedPrice.map(p => l))
-      val size = listingsWithPrices.size.toDouble
 
-      val mean = listingsWithPrices.map(_.parsedPrice.get).sum.toDouble / size
-      val variance = listingsWithPrices.map(l => Math.pow(l.parsedPrice.get - mean, 2)).sum / size
+      // Compute the standard deviation of the sample that includes matching manufacturers
+      val manufacturerMatches = listingsWithPrices.filter(l => BKTree.levenshtein(l.manufacturer.toLowerCase, p.manufacturer.toLowerCase) <= 2)
+      val size = manufacturerMatches.size.toDouble
+      val mean = manufacturerMatches.map(_.parsedPrice.get).sum / size
+      val variance = manufacturerMatches.map(l => Math.pow(l.parsedPrice.get - mean, 2)).sum / size
       val standardDeviation = Math.sqrt(variance)
+
+      // Filter listings with prices that are more than 2 standard deviations from the sample mean. This
+      // Should be enough to pick up the real outliers and allows us to consider listings where the manufacturer
+      // doesn't match.
       listingsWithPrices.filter(l => Math.abs(l.parsedPrice.get - mean) <= (standardDeviation * 2))
     }
 
