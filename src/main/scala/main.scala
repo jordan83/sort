@@ -27,7 +27,7 @@ class ListingCollection(listings: Array[Listing]) {
     // Filter listings with prices that are more than 2 standard deviations from the mean. This
     // Should be enough to pick up the real outliers. We could be a bit more conservative if we
     // took into account the currency differences.
-    def filterByPrice(listings: List[Listing]) = {
+    def filterByPrice(listings: Iterable[Listing]) = {
       val listingsWithPrices = listings.flatMap(l => l.parsedPrice.map(p => l))
       val size = listingsWithPrices.size.toDouble
 
@@ -49,8 +49,7 @@ class ListingCollection(listings: Array[Listing]) {
     filterByPrice(
       listingFrequencies.
       filter{ case (listing, numMatches) => numMatches >= tokenTolerancePairs(p).size }.
-      map(_._1).
-      toList
+      map(_._1)
     )
   }
 

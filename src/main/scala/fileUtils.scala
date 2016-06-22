@@ -20,7 +20,7 @@ object FileUtils {
     fileToJsonList("products.txt").map(transformProductJson(_)).map(_.extract[Product])
   }
 
-  def writeResults(file: String, results: ParArray[(String, List[Listing])]) = {
+  def writeResults(file: String, results: ParArray[(String, Iterable[Listing])]) = {
     val pw = new PrintWriter(new File(file))
     results.toList.foreach{ kv =>
       val json = ("product_name" -> kv._1) ~
